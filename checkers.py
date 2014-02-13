@@ -1,3 +1,9 @@
+def getRow(n):
+    return n/4
+
+def getCol(n):
+    return n%4
+
 def parsePlayerNum():
     players = [-1,-1]
     for x in range(2):
@@ -7,7 +13,7 @@ def parsePlayerNum():
             try:
                 aiNum = int(raw_input(text))
             except ValueError:
-                print "BADDDDDD!!!!!"
+                print "Out of Range or Not a Number"
         players[x] = aiNum
     return players
 
@@ -56,17 +62,20 @@ def cordsToMove(inputS):
     moves = []
     for x in inputS.split(" "):
         temp = x.split(",")
-        row = int(temp[0])
+        if(len(temp)!=2): return [[-1,-1]]
+        row = int(temp[0]) #Catch valueERROR
         col = int(temp[1])
+        if not((0 < row < 9)) or not((0 < col < 9)):
+           return [[-1,-1]]
         moves.append([row,col])
     return moves
 
 def getHumanMove():
-    inputS = raw_input("What would you like to move\n<PlaceX>,<PlaceY> <Dest1X>,<Dest1Y> [<Dest2X>,Dest2Y*...]\n")
+    inputS = raw_input("What would you like to move\n<PlaceRow>,<PlaceCol> <Dest1Row>,<Dest1Col> [<Dest2Row>,<Dest2Col> ...]\n")
     moves = cordsToMove(inputS)
     trueMoves = []
     for move in moves:
-        if move[0] %2 == move[1] % 2:
+        if (move[0] %2 == move[1] % 2) or move[0] < 0 or move[1] < 0:
             return [-1]
         trueMoves.append(((move[0]-1)*4)+(move[1]-1)/2)	
     return trueMoves
@@ -89,20 +98,80 @@ def getMove(board, currPlayer, playerType):
         board = flipB(board)
     return move
 
+def validateMove(board, moves, player):
+    if moves[0] < 0: return False
+    tempBoard = board
+    if player == 1:
+        tempBoard = flipB(board[:])
+        moves = flipM(moves[:])
+        displayBoard(tempBoard)
+  #      return True
+    piece = moves[0]
+    for move in moves[1:]:
+        if (move==(piece+4)) and (tempBoard[move] == 0):
+            return True
+        if (move==(piece+5)) and (tempBoard[move] == 0):
+            return True
+        if (move==(piece+7)) and (tempBoard[move] == 0) and (tempBoard[piece+3]<0):
+            return True
+        if (move==(piece+9)) and (tempBoard[move] == 0) and (tempBoard[piece+4]<0):
+            return True
+        if(tempBoard[piece]>1):
+            if (move==(piece-4)) and (tempBoard[move] == 0):
+                return True
+            if (move==(piece-5)) and (tempBoard[move] == 0):
+                return True
+            if (move==(piece-7)) and (tempBoard[move] == 0) and (tempBoard[piece-3]<0):
+                return True
+            if (move==(piece-9)) and (tempBoard[move] == 0) and (tempBoard[piece-4]<0):
+                return True
+        piece = move
+        
+    print "Eh, " + str(moves) + " failed" #place holder for move validation
+    return False
+
+def applyMove(board, moves, player):
+    if player == 1:
+        flipB(board)
+        flipM(moves)
+    srcIndex = moves[0]
+    srcPiece = board[srcIndex]
+    for move in moves[1:]:
+        if (move==(srcIndex+7)):
+            board[srcIndex+3]=0 #capture piece logic
+        elif (move==(srcIndex+9)):
+            board[srcIndex+4]=0 #capture piece logic
+        elif (move==(srcIndex-7)):
+            board[srcIndex-3]=0 #capture piece logic
+        elif (move==(srcIndex-9)):
+            board[srcIndex-4]=0 #capture piece logic
+
+        board[srcIndex] = 0
+        board[move]=srcPiece
+        srcIndex = move
+        srcPiece = board[srcIndex]
+    if player == 1:
+        flipB(board)
+    return board    
 
 def checkers():
+#    board = [0,0,1,0,0,0,0,0,0,0,0,0,0,-2,-1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
     players = parsePlayerNum()
     # Player 0 is positive, Player 1 is negative
     currPlayer = 0
     while not win(board, currPlayer):
         displayBoard(board)
+        if currPlayer == 0:
+            print "It is Player x's Turn"
+        else:
+            print "It is Player o's Turn"
         move = getMove(board, currPlayer, players[currPlayer])
-        return
-
-print getHumanMove()
-temp = [1,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-displayBoard(temp)
-temp = flipB(temp)
-displayBoard(temp)
-#checkers()
+        if(validateMove(board, move, currPlayer)):
+            board = applyMove(board,move, currPlayer)
+        else:
+            print "Invalid Move"
+            continue
+        currPlayer = (currPlayer + 1) %2
+    print "Player " + ((currPlayer + 1)%2) + " WINS"
+checkers()
