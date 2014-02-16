@@ -1,4 +1,6 @@
 from ctypes import *
+from HaPy import hsklAI #See https://github.com/sakana/HaPy/blob/master/README.md 
+                        #for directions on how to use HaPY. 
 
 #pass in a list of ints
 def callCPPAI(board):
@@ -188,3 +190,4 @@ def checkers():
 
 #checkers()
 print callCPPAI([1,2,3])
+print hsklAI.callAI([1,2,3])
