@@ -1,3 +1,14 @@
+from ctypes import *
+
+#pass in a list of ints
+def callCPPAI(board):
+    arr = (c_int * len(board))(*board)
+    ai = CDLL("cpp_code.so").callAI
+    ai.restype = POINTER(c_int * len(board))
+    newBoard = ai(arr).contents
+    return [newBoard[i] for i in range(len(newBoard))]
+
+
 def getRow(n):
     return n/4
 
@@ -174,4 +185,6 @@ def checkers():
             continue
         currPlayer = (currPlayer + 1) %2
     print "Player " + ((currPlayer + 1)%2) + " WINS"
-checkers()
+
+#checkers()
+print callCPPAI([1,2,3])
