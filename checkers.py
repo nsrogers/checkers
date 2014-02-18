@@ -120,28 +120,43 @@ def validateMove(board, moves, player):
         displayBoard(tempBoard)
   #      return True
     piece = moves[0]
-    for move in moves[1:]:
-        if (move==(piece+4)) and (tempBoard[move] == 0):
+    if len(moves) == 1:
+        move = moves[1]
+        offset = getRow(piece) % 2;
+        if (move==(piece+4 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 4)): # down left
             return True
-        if (move==(piece+5)) and (tempBoard[move] == 0):
-            return True
-        if (move==(piece+7)) and (tempBoard[move] == 0) and (tempBoard[piece+3]<0):
-            return True
-        if (move==(piece+9)) and (tempBoard[move] == 0) and (tempBoard[piece+4]<0):
+        if (move==(piece+5 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 3)): # down right
             return True
         if(tempBoard[piece]>1):
-            if (move==(piece-4)) and (tempBoard[move] == 0):
+            if (move==(piece-3 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 3)): #up right
                 return True
-            if (move==(piece-5)) and (tempBoard[move] == 0):
+            if (move==(piece-4 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 4)): # up left
                 return True
-            if (move==(piece-7)) and (tempBoard[move] == 0) and (tempBoard[piece-3]<0):
-                return True
-            if (move==(piece-9)) and (tempBoard[move] == 0) and (tempBoard[piece-4]<0):
-                return True
-        piece = move
-        
-    print "Eh, " + str(moves) + " failed" #place holder for move validation
-    return False
+        print "Eh, " + str(moves) + " failed" #place holder for move validation
+        return False
+                 
+    for move in moves[1:]:
+        offset = getRow(piece) % 2;
+        if (move==(piece+7)) and (tempBoard[move] == 0) and (tempBoard[piece+4 - offset]<0 and
+                getCol(piece) != 0): #jump down left
+            piece = move
+            continue
+        if (move==(piece+9)) and (tempBoard[move] == 0) and (tempBoard[piece+5 - offset]<0 and
+                getCol(piece) != 3): #jump down right
+            piece = move
+            continue
+        if(tempBoard[piece]>1):
+            if (move==(piece-7)) and (tempBoard[move] == 0) and (tempBoard[piece-3 - offset]<0 and
+                    getCol(piece) != 3): # jump right
+                piece = move
+                continue
+            if (move==(piece-9)) and (tempBoard[move] == 0) and (tempBoard[piece-4 - offset]<0 and
+                    getCol(piece) != 0): # jump left
+                piece = move
+                continue
+        print "Eh, " + str(moves) + " failed" #place holder for move validation
+        return False
+    return True
 
 def applyMove(board, moves, player):
     if player == 1:
@@ -150,26 +165,30 @@ def applyMove(board, moves, player):
     srcIndex = moves[0]
     srcPiece = board[srcIndex]
     for move in moves[1:]:
+        offset = getRow(srcIndex) % 2
         if (move==(srcIndex+7)):
-            board[srcIndex+3]=0 #capture piece logic
+            board[srcIndex+4 - offset]=0 #capture piece logic
         elif (move==(srcIndex+9)):
-            board[srcIndex+4]=0 #capture piece logic
+            board[srcIndex+5 - offset]=0 #capture piece logic
         elif (move==(srcIndex-7)):
-            board[srcIndex-3]=0 #capture piece logic
+            board[srcIndex-3 - offset]=0 #capture piece logic
         elif (move==(srcIndex-9)):
-            board[srcIndex-4]=0 #capture piece logic
+            board[srcIndex-4 - offset]=0 #capture piece logic
 
         board[srcIndex] = 0
         board[move]=srcPiece
         srcIndex = move
         srcPiece = board[srcIndex]
+    for x in range(28,32):
+        if board[x] == 1:
+            board[x] = 2;
     if player == 1:
         flipB(board)
     return board    
 
 def checkers():
-#    board = [0,0,1,0,0,0,0,0,0,0,0,0,0,-2,-1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    board = [0,1,0,0,0,0,-1,0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,-1,0,0,0,1,0,0,0,0]
+#    board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
     players = parsePlayerNum()
     # Player 0 is positive, Player 1 is negative
     currPlayer = 0
@@ -188,6 +207,6 @@ def checkers():
         currPlayer = (currPlayer + 1) %2
     print "Player " + ((currPlayer + 1)%2) + " WINS"
 
-#checkers()
+checkers()
 print callCPPAI([1,2,3])
 print hsklAI.callAI([1,2,3])
