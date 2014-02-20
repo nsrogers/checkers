@@ -1,4 +1,4 @@
-CC = g++ -Wall -g
+CC = g++ -Wall -g -std=c++11
 ALLFILES = README.md checkers.py cpp_code.cc makefile \
 	 		Export.hs HaPy_init.c HsklAI.hs .gitignore
 
