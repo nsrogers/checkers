@@ -22,16 +22,28 @@ minMaxTree::minMaxTree(list<list<int> > mov)
 
 int* applyMove(int* board, list<int> move)
 {
-    int* temp = malloc(sizeof(int) * LEN);
+    int* temp = static_cast<int*>(malloc(sizeof(int) * LEN));
     memcpy(temp, board, sizeof(int)*LEN);
     auto piece = move.begin();
-    for(auto j = move.begin() + 1; j != move.end(); j++ )
+    for(auto j = ++move.begin(); j != move.end(); j++ )
     {
         temp[*j] = temp[*piece];
         temp[*piece] = 0;
+        
         //TODO: Piece being jumped over needs to be cleared
+        int offset = ((*j)/4) % 2;
+        if((*j) - (*piece) == 9)
+            temp[(*j) - 4 - offset] = 0;
+        else if((*j) - (*piece) == 7)
+            temp[(*j) - 3 - offset] = 0;
+        else if((*piece) - (*j) == 9)
+            temp[(*piece) - 4 - offset] = 0;
+        else if((*piece) - (*j) == 7)
+            temp[(*piece) - 3 - offset] = 0;
+        
+        piece = j;
     }
-    return tmp;
+    return temp;
 }
 
 list<list<int> > getAllJumps(int* board, int piece);
