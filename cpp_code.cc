@@ -8,17 +8,19 @@ class minMaxTree
 {
     public:
         int heuristic;
-        list<list<int> > moves;
+        list<int> move;
         list<minMaxTree*> children;
         
-        minMaxTree(list<list<int> >);
+        minMaxTree(list<int>);
 };
 
-minMaxTree::minMaxTree(list<list<int> > mov)
+minMaxTree::minMaxTree(list<int> mov1)
 {
-    moves = mov;
+    move = mov1;
     heuristic = 0;
 }
+
+
 
 int* applyMove(int* board, list<int> move)
 {
@@ -138,6 +140,40 @@ list<list<int> > possibleMoves(int* board)
     return moves;
 }
 
+void swap(int* a, int i, int j)
+{
+    int t = a[i];
+    a[i] = a[j];
+    a[j] = t;
+}
+
+int* flip(int* board)
+{
+    for(int i = 0; i < (LEN-1)/2; i++)
+    {
+        swap(board, i, LEN - 1 - i);
+    }
+    for(int i = 0; i < LEN; i++)
+    {
+        board[i] = -board[i];
+    }
+    return board;
+}
+
+minMaxTree* build(int* board, int depth, minMaxTree* node)
+{
+    if(depth == 0)
+        return node;
+    list<list<int> > temp = possibleMoves(board);
+    for(auto move = temp.begin(); move != temp.end(); move++)
+    {
+        int* tempBoard = flip(applyMove(board, *move));
+        node->children.push_back(build(tempBoard, depth - 1,
+            new minMaxTree(*move)));
+    }
+    return node;
+}
+
 void printListOfListOfInts(list<list<int> > moves)
 {
     for(auto i = moves.begin(); i != moves.end(); i++)
@@ -151,7 +187,18 @@ void printListOfListOfInts(list<list<int> > moves)
     }
 }
 
-
+void printTree(minMaxTree* node, int depth)
+{
+    for(int i = 0; i < depth; i++)
+        cout << "   ";
+    cout << "[";
+    for(auto j = node->move.begin(); j != node->move.end(); j++)
+        cout << *j << " ";
+    cout << "]\n";
+    for(auto k = node->children.begin(); k != node->children.end(); k++)
+        printTree(*k, depth+1);
+    
+}
 
 /*
  * This function is called by the Python front end
@@ -161,5 +208,8 @@ void printListOfListOfInts(list<list<int> > moves)
 extern "C" int* callAI(int* board)
 {    
     printListOfListOfInts(possibleMoves(board));
+    minMaxTree* root = new minMaxTree(list<int>());
+    root = build(board, 3, root);
+    printTree(root,0);
     return board;
 }
