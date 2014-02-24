@@ -5,11 +5,19 @@ from HaPy import hsklAI #See https://github.com/sakana/HaPy/blob/master/README.m
 #pass in a list of ints
 def callCPPAI(board):
     arr = (c_int * len(board))(*board)
+    aiMove = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    aiMovePassed = (c_int * len(aiMove))(*aiMove)
     ai = CDLL("cpp_code.so").callAI
     ai.restype = POINTER(c_int * len(board))
-    newBoard = ai(arr).contents
-    return [newBoard[i] for i in range(len(newBoard))]
-
+    newBoard = ai(arr, aiMovePassed).contents
+    tempMoveList = [newBoard[i] for i in range(len(newBoard))]
+    retMove = []
+    for j in tempMoveList:
+        if j != -1:
+            retMove.append(j)
+        else:
+            break
+    return retMove
 
 def getRow(n):
     return n/4
@@ -102,9 +110,9 @@ def getMove(board, currPlayer, playerType):
         board = flipB(board)
 
     if playerType == 1: #haskell
-        move = getHaskellMove(board)
+        move = hsklAI.callAI(board)
     elif playerType == 2: #c++
-        move = getCppMove(board)
+        move = callCPPAI(board)
 
     if currPlayer == 1:
         move = flipM(move)
@@ -120,20 +128,17 @@ def validateMove(board, moves, player):
         displayBoard(tempBoard)
   #      return True
     piece = moves[0]
-    if len(moves) == 1:
-        move = moves[1]
-        offset = getRow(piece) % 2;
-        if (move==(piece+4 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 4)): # down left
+    move = moves[1]
+    offset = getRow(piece) % 2;
+    if (move==(piece+4 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 4)): # down left
+        return True
+    if (move==(piece+5 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 3)): # down right
+        return True
+    if(tempBoard[piece]>1):
+        if (move==(piece-3 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 3)): #up right
             return True
-        if (move==(piece+5 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 3)): # down right
+        if (move==(piece-4 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 4)): # up left
             return True
-        if(tempBoard[piece]>1):
-            if (move==(piece-3 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 3)): #up right
-                return True
-            if (move==(piece-4 - offset)) and (tempBoard[move] == 0 and (piece % 8 != 4)): # up left
-                return True
-        print "Eh, " + str(moves) + " failed" #place holder for move validation
-        return False
                  
     for move in moves[1:]:
         offset = getRow(piece) % 2;
@@ -187,8 +192,8 @@ def applyMove(board, moves, player):
     return board    
 
 def checkers():
-    board = [0,1,0,0,0,0,-1,0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,-1,0,0,0,1,0,0,0,0]
-#    board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    #board = [0,1,0,0,0,0,-1,0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,-1,0,0,0,1,0,0,0,0]
+    board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
     players = parsePlayerNum()
     # Player 0 is positive, Player 1 is negative
     currPlayer = 0
@@ -207,8 +212,8 @@ def checkers():
         currPlayer = (currPlayer + 1) %2
     print "Player " + ((currPlayer + 1)%2) + " WINS"
 
-#checkers()
+checkers()
 #board = [0,2,0,0,0,-1,-1,0,0,0,0,0,0,-1,-1,-1,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0a]
-board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-callCPPAI(board)
-print hsklAI.callAI([1,2,3])
+# board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+# print callCPPAI(board)
+# print hsklAI.callAI([1,2,3])
