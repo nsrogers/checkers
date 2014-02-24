@@ -160,10 +160,23 @@ int* flip(int* board)
     return board;
 }
 
+int heuristic(int* board)
+{
+    int h = 0;
+    for(int i = 0; i < LEN; i++)
+    {
+        h -= board[i];
+    }
+    return h;
+}
+
 minMaxTree* build(int* board, int depth, minMaxTree* node)
 {
     if(depth == 0)
+    {
+        node->heuristic = heuristic(board);
         return node;
+    }
     list<list<int> > temp = possibleMoves(board);
     for(auto move = temp.begin(); move != temp.end(); move++)
     {
@@ -187,6 +200,49 @@ void printListOfListOfInts(list<list<int> > moves)
     }
 }
 
+int minmax(bool turn, minMaxTree* node)
+{
+    if(node->children.empty())
+    {
+        return node->heuristic;
+    }
+    
+    int val = ((turn) ? -25 : 25);
+    for(auto i = node->children.begin(); i != node->children.end(); i++)
+    {
+        if(!turn)
+        {
+            if((*i)->heuristic < val)
+            {
+                val = minmax(true ,*i);
+            }
+        }
+        else
+        {
+            if((*i)->heuristic > val)
+            {
+                val = minmax(false ,*i);
+            }
+        }
+    }
+    return val;
+}
+
+
+list<int> minmaxCaller(minMaxTree* root)
+{
+    minMaxTree* max = *(root->children.begin());
+    for(auto i = root->children.begin(); i != root->children.end(); i++)
+    {
+        int val = minmax(false ,*i);
+        if(val > max->heuristic)
+        {
+            max = *i;
+        }
+    }
+    return max->move;
+}
+
 void printTree(minMaxTree* node, int depth)
 {
     for(int i = 0; i < depth; i++)
@@ -205,11 +261,18 @@ void printTree(minMaxTree* node, int depth)
  * Using ctypes
  * Pass in an array of ints that represent the board
  */
-extern "C" int* callAI(int* board)
+extern "C" int* callAI(int* board, int* retMove)
 {    
-    printListOfListOfInts(possibleMoves(board));
+    //printListOfListOfInts(possibleMoves(board));
     minMaxTree* root = new minMaxTree(list<int>());
     root = build(board, 3, root);
-    printTree(root,0);
-    return board;
+    //printTree(root,0);
+    list<int> aiMove = minmaxCaller(root);
+    cout << "HELP" << endl;
+    int j = 0;
+    for(auto i = aiMove.begin(); i != aiMove.end(); i++, j++)
+    {
+        retMove[j] = *i;
+    }
+    return retMove;
 }
