@@ -212,8 +212,9 @@ def checkers():
         currPlayer = (currPlayer + 1) %2
     print "Player " + ((currPlayer + 1)%2) + " WINS"
 
-checkers()
+#checkers()
 #board = [0,2,0,0,0,-1,-1,0,0,0,0,0,0,-1,-1,-1,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0a]
 # board = [1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 # print callCPPAI(board)
-# print hsklAI.callAI([1,2,3])
+print hsklAI.callAI([1,0,0,0,0,0,0,0,0,0,0])
+
