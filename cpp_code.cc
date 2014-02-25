@@ -31,8 +31,7 @@ int* applyMove(int* board, list<int> move)
     {
         temp[*j] = temp[*piece];
         temp[*piece] = 0;
-        
-        //TODO: Piece being jumped over needs to be cleared
+
         int offset = ((*j)/4) % 2;
         if((*j) - (*piece) == 9)
             temp[(*j) - 4 - offset] = 0;
