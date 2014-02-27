@@ -24,27 +24,25 @@ minMaxTree::minMaxTree(list<int> mov1)
 
 int* applyMove(int* board, list<int> move)
 {
-    int* temp = static_cast<int*>(malloc(sizeof(int) * LEN));
-    memcpy(temp, board, sizeof(int)*LEN);
     auto piece = move.begin();
     for(auto j = ++move.begin(); j != move.end(); j++ )
     {
-        temp[*j] = temp[*piece];
-        temp[*piece] = 0;
+        board[*j] = board[*piece];
+        board[*piece] = 0;
 
         int offset = ((*j)/4) % 2;
         if((*j) - (*piece) == 9)
-            temp[(*j) - 4 - offset] = 0;
+            board[(*j) - 4 - offset] = 0;
         else if((*j) - (*piece) == 7)
-            temp[(*j) - 3 - offset] = 0;
+            board[(*j) - 3 - offset] = 0;
         else if((*piece) - (*j) == 9)
-            temp[(*piece) - 4 - offset] = 0;
+            board[(*piece) - 4 - offset] = 0;
         else if((*piece) - (*j) == 7)
-            temp[(*piece) - 3 - offset] = 0;
+            board[(*piece) - 3 - offset] = 0;
         
         piece = j;
     }
-    return temp;
+    return board;
 }
 
 list<list<int> > getAllJumps(int* board, int piece);
@@ -54,11 +52,14 @@ list<list<int> > jumpHelper(int* board, int piece, int offset)
     list<int> move;
     move.push_back(piece);
     move.push_back(piece+offset);
-    list<list<int> > temp = getAllJumps(applyMove(board, move),piece+offset);
+    int* tempBoard = static_cast<int*>(malloc(sizeof(int) * LEN));
+    memcpy(tempBoard, board, sizeof(int) * LEN);
+    list<list<int> > temp = getAllJumps(applyMove(tempBoard, move),piece+offset);
     for(auto i = temp.begin(); i != temp.end(); ++i){
         (*i).push_front(piece);
     }
     temp.push_back(move);
+    free(tempBoard);
     return temp;
 }
 
@@ -177,11 +178,26 @@ minMaxTree* build(int* board, int depth, minMaxTree* node)
         return node;
     }
     list<list<int> > temp = possibleMoves(board);
+    
+    if(depth % 2 == 0 && temp.begin()->empty()) //if my move
+    {
+        node->heuristic = -25; //stalemate bad
+        return node;
+    }
+    else if(depth % 2 == 1 && temp.begin()->empty())
+    {
+        node->heuristic = 25; //stalemate good
+        return node;
+    }
+    
     for(auto move = temp.begin(); move != temp.end(); move++)
     {
-        int* tempBoard = flip(applyMove(board, *move));
+        int* tempBoard = static_cast<int*>(malloc(sizeof(int) * LEN));
+        memcpy(tempBoard, board, sizeof(int) * LEN);
+        tempBoard = flip(applyMove(tempBoard, *move));
         node->children.push_back(build(tempBoard, depth - 1,
             new minMaxTree(*move)));
+        free(tempBoard);
     }
     return node;
 }
@@ -233,7 +249,7 @@ list<int> minmaxCaller(minMaxTree* root)
     minMaxTree* max = *(root->children.begin());
     for(auto i = root->children.begin(); i != root->children.end(); i++)
     {
-        int val = minmax(false ,*i);
+        int val = minmax(true ,*i);
         if(val > max->heuristic)
         {
             max = *i;
@@ -264,10 +280,9 @@ extern "C" int* callAI(int* board, int* retMove)
 {    
     //printListOfListOfInts(possibleMoves(board));
     minMaxTree* root = new minMaxTree(list<int>());
-    root = build(board, 3, root);
+    root = build(board, 5, root);
     //printTree(root,0);
     list<int> aiMove = minmaxCaller(root);
-    cout << "HELP" << endl;
     int j = 0;
     for(auto i = aiMove.begin(); i != aiMove.end(); i++, j++)
     {

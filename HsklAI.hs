@@ -2,14 +2,47 @@ module HsklAI where
     
 import Data.Char
 
+type Move = [Int]
+
+data MinMaxTree = Node Int Move [MinMaxTree]
+
+instance Show MinMaxTree where
+    show (Node _ m []) = show m
+    show (Node _ m (xs)) = (show xs) ++ (show m)
+
+heuristic :: [Int] -> Int
+heuristic board = foldl (+) 0 board
+
+flipB :: [Int] -> [Int]
+flipB b = map (*(-1)) $ reverse b
+
+build :: [Int] -> Int -> Move -> MinMaxTree
+build board 0 mov = Node (heuristic board) mov []
+build board depth mov = if (null) children then (Node (if depth `mod` 2 == 1 then 0-25 else 25) mov children) else (Node 0 mov children)
+    where children = map (\x -> build (flipB (applyMove board x)) (depth-1) x) $ possibleMoves board
+
+minmax :: Bool -> MinMaxTree -> Int
+minmax _ (Node h _ []) = h
+minmax True (Node h _ children) = maximum (map (minmax False) children) 
+minmax False (Node h _ children) = minimum (map (minmax True) children) 
+
+minmaxCall :: Int -> Move -> [MinMaxTree] -> Move
+minmaxCall _ mov [] = mov
+minmaxCall h mov (node@(Node _ m1 _):nodes) = if tempH > h then minmaxCall tempH m1 nodes
+                                            else minmaxCall h mov nodes
+                                            where tempH = minmax True node
+
+getChildren :: MinMaxTree -> [MinMaxTree]
+getChildren (Node _ _ children) = children
+
 callAI :: [Int] -> [Int]
-callAI xs = (filter (not . null) (possibleMoves xs)) !! 0
+callAI xs = minmaxCall (-9001) [] (getChildren (build xs 5 []))
 
-possibleMoves :: [Int] -> [[Int]]
-possibleMoves board = (foldl (++) [] (map (getPossibleMove board)  [0..31])) ++ (foldl (++) [] (map (getAllJumps board) [0..31]))
+possibleMoves :: [Int] -> [Move]
+possibleMoves board = filter (not . null) $ (foldl (++) [] (map (getPossibleMove board)  [0..31])) ++ (foldl (++) [] (map (getAllJumps board) [0..31]))
 
 
-getPossibleMove :: [Int] -> Int -> [[Int]]
+getPossibleMove :: [Int] -> Int -> [Move]
 getPossibleMove board index 
             | board!!index > 0 = [downL, downR, upL, upR]
             | otherwise = []
@@ -28,7 +61,7 @@ replaceNth n newVal (x:xs)
      | n == 0 = newVal:xs
      | otherwise = x:replaceNth (n-1) newVal xs           
            
-applyMove :: [Int] -> [Int] -> [Int]
+applyMove :: [Int] -> Move -> [Int]
 applyMove board [] = board
 applyMove board (m1:[]) = board
 applyMove board (m1:m2:moves)
@@ -40,10 +73,10 @@ applyMove board (m1:m2:moves)
                 where newBoard = (replaceNth m1 0 (replaceNth m2 (board!!m1) board))
                       offset = ((m2 `div` 4) `mod` 2)
                   
-jumperHelper :: [Int] -> Int -> Int -> [[Int]]
+jumperHelper :: [Int] -> Int -> Int -> [Move]
 jumperHelper board index offset = [index, index+offset] : (map (index:) $ getAllJumps (applyMove board [index, index+offset]) (index+offset))
                       
-getAllJumps :: [Int] -> Int -> [[Int]]
+getAllJumps :: [Int] -> Int -> [Move]
 getAllJumps board index
         | board!!index > 0 = downL ++ downR ++ upL ++ upR
         | otherwise = [] 
