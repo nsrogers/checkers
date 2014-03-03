@@ -1,4 +1,5 @@
 from ctypes import *
+import time
 from HaPy import hsklAI #See https://github.com/sakana/HaPy/blob/master/README.md 
                         #for directions on how to use HaPY. 
 
@@ -19,6 +20,23 @@ def callCPPAI(board):
             break
     return retMove
 
+def callRandomAI(board):
+    arr = (c_int * len(board))(*board)
+    aiMove = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    aiMovePassed = (c_int * len(aiMove))(*aiMove)
+    ai = CDLL("cpp_code.so").callRandomAI
+    ai.restype = POINTER(c_int * len(board))
+    newBoard = ai(arr, aiMovePassed).contents
+    tempMoveList = [newBoard[i] for i in range(len(newBoard))]
+    retMove = []
+    for j in tempMoveList:
+        if j != -1:
+            retMove.append(j)
+        else:
+            break
+    return retMove
+
+
 def getRow(n):
     return n/4
 
@@ -28,9 +46,9 @@ def getCol(n):
 def parsePlayerNum():
     players = [-1,-1]
     for x in range(2):
-        text = "Who is Player " + str(x+1) + " [0] Human, [1] Haskell, [2] C++: "
+        text = "Who is Player " + str(x+1) + " [0] Human, [1] Haskell, [2] C++ [3] Random: "
         aiNum = -1            
-        while(not (-1 < aiNum < 3)):
+        while(not (-1 < aiNum < 4)):
             try:
                 aiNum = int(raw_input(text))
             except ValueError:
@@ -38,34 +56,69 @@ def parsePlayerNum():
         players[x] = aiNum
     return players
 
-def win(board, player):
-    player = (player + 1) % 2
+def win(board,player):
+    return win1v1(board,player) or winnomove(board,player)
+
+def win1v1(board, player):
     for square in board:
-        if player == 0 and square < 0:
+        if player == 0 and square > 0:
             return False
-        if player == 1 and square > 0:
+        if player == 1 and square < 0:
             return False
     return True
+    
+def winnomove(board,player):
+    for i in range(32):
+        for j in [-9,-7,-5, -4, -3, 3, 4, 5, 7, 9]:
+            if player == 0 and board[i] < 0:
+                if validateMove(board, [i, i+j], 1):
+                    return False
+            if player == 1 and board[i] > 0:
+                if validateMove(board, [i, i+j], 0):
+                    return False
+    return True
+
+def draw(board, count, value):
+    numPos = 0
+    numNeg = 0
+    print count
+    for i in board:
+        if i > 0:
+            numPos = numPos + i
+        if i < 0:
+            numNeg = numNeg + i
+    if numPos + numNeg == value:
+        count = count + 1
+    else:
+        count = 1
+    value = numPos + numNeg
+    if numPos == 1 and numNeg == 1:
+        return True, count, value
+    elif count == 100: 
+        return True, count, value
+    else:
+        return False, count, value
 
 def displayBoard(board):
-    lines = ""
     row = 1
+    lines = "   1 2 3 4 5 6 7 8"
     for counter in range(64):
         if counter % 8 == 0:
             lines = lines + '\n'
             row = (row + 1) % 2
+            lines = lines + str(getRow(counter/2) + 1) + "  "
         if counter % 2 == row:
-            lines = lines + '_'
+            lines = lines + '_ '
         elif board[counter/2] == 1:
-            lines = lines + 'x'
+            lines = lines + 'x '
         elif board[counter/2] == 2:
-            lines = lines + 'X'
+            lines = lines + 'X '
         elif board[counter/2] == -1:
-            lines = lines + 'o'
+            lines = lines + 'o '
         elif board[counter/2] == -2:
-            lines = lines +'O'
+            lines = lines +'O '
         else:
-            lines = lines +'_'
+            lines = lines +'_ '
     print lines        
 
 
@@ -104,24 +157,32 @@ def getHumanMove():
 
 def getMove(board, currPlayer, playerType):
     move = []
+    start = time.time()
     if(playerType == 0): #human
-        return getHumanMove()
+        move = getHumanMove()
+        print "Human Time: " + str(time.time() - start) + " s"
+        return move
 
     if currPlayer == 1:
         board = flipB(board)
-
+        
     if playerType == 1: #haskell
         move = hsklAI.callAI(board)
+        print "Haskell AI Time: " + str(time.time() - start) + " s"
     elif playerType == 2: #c++
         move = callCPPAI(board)
-
+        print "CPP AI Time: " + str(time.time() - start) + " s"
+    elif playerType == 3:
+        move = callRandomAI(board)
+        print "Random AI Time: " + str(time.time() - start) + " s"
     if currPlayer == 1:
         move = flipM(move)
         board = flipB(board)
     return move
 
 def validateMove(board, moves, player):
-    if moves[0] < 0: return False
+    for move in moves:
+        if not (0 <= move <= 31): return False
     tempBoard = board[:]
     if player == 1:
         tempBoard = flipB(board[:])
@@ -141,7 +202,6 @@ def validateMove(board, moves, player):
             return True
                  
     for move in moves[1:]:
-        print str(piece) + " " + str(move)
         offset = getRow(piece) % 2;
         if (move==(piece+7)) and (tempBoard[move] == 0) and (tempBoard[piece+4 - offset]<0 and
                 getCol(piece) != 0): #jump down left
@@ -154,7 +214,6 @@ def validateMove(board, moves, player):
             piece = move
             continue
         if(tempBoard[piece]>1):
-            print str(piece-7) + " " + str(tempBoard[move]) + " " + str(tempBoard[piece - 3 - offset]) + " " + str(getCol(piece))
             if (move==(piece-7)) and (tempBoard[move] == 0) and (tempBoard[piece-3 - offset]<0) and \
                     (getCol(piece) != 3): # jump right
                 applyMove(tempBoard, [piece, move], 0)
@@ -165,7 +224,7 @@ def validateMove(board, moves, player):
                 applyMove(tempBoard, [piece, move], 0)
                 piece = move
                 continue
-        print "Eh, " + str(moves) + " failed" #place holder for move validation
+#        print "Eh, " + str(moves) + " failed" #place holder for move validation
         return False
     return True
 
@@ -205,7 +264,11 @@ def checkers():
     players = parsePlayerNum()
     # Player 0 is positive, Player 1 is negative
     currPlayer = 0
-    while not win(board, currPlayer):
+    count = 0
+    value = 0
+    _win = False
+    _draw = False
+    while (not _win) and (not _draw):
         displayBoard(board)
         if currPlayer == 0:
             print "It is Player x's Turn"
@@ -217,8 +280,16 @@ def checkers():
         else:
             print "Invalid Move"
             continue
+        _win = win(board, currPlayer)
+        _draw, count, value = draw(board, count, value)
         currPlayer = (currPlayer + 1) %2
-    print "Player " + str((currPlayer + 1)%2) + " WINS"
+    displayBoard(board)
+    if _win:
+        print "Player " + str((currPlayer + 1)%2) + " WINS"
+    elif _draw:
+        print "Draw"
+    else:
+        print "Game ended for unknown reasons"
 
 checkers()
 #board = [0,2,0,0,0,-1,-1,0,0,0,0,0,0,-1,-1,-1,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0]

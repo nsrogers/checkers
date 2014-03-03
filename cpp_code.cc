@@ -1,6 +1,9 @@
 #include <list>
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
+#include <ctime>
+#include <vector>
 #define LEN 32
 using namespace std;
 
@@ -41,6 +44,9 @@ int* applyMove(int* board, list<int> move)
             board[(*piece) - 3 - offset] = 0;
         
         piece = j;
+    }
+    if(*piece > 27){
+        board[*piece] = 2;
     }
     return board;
 }
@@ -163,9 +169,25 @@ int* flip(int* board)
 int heuristic(int* board)
 {
     int h = 0;
+    bool win = true;
     for(int i = 0; i < LEN; i++)
     {
-        h -= board[i];
+        if(board[i] > 0)
+        {
+            win = false;
+        }
+    }
+    if(win)
+        return 1000;
+    
+    
+    for(int i = 0; i < LEN; i++)
+    {
+        h -= 20*board[i];
+        if(i >= 12 && i <= 19 && board[i] < 0)
+            h += 5;
+        else if(i >= 0 && i <= 11 && board[i] < 0)
+            h += 1;
     }
     return h;
 }
@@ -181,12 +203,12 @@ minMaxTree* build(int* board, int depth, minMaxTree* node)
     
     if(depth % 2 == 0 && temp.begin()->empty()) //if my move
     {
-        node->heuristic = -25; //stalemate bad
+        node->heuristic = -10000; //stalemate bad
         return node;
     }
     else if(depth % 2 == 1 && temp.begin()->empty())
     {
-        node->heuristic = 25; //stalemate good
+        node->heuristic = 10000; //stalemate good
         return node;
     }
     
@@ -222,24 +244,25 @@ int minmax(bool turn, minMaxTree* node)
         return node->heuristic;
     }
     
-    int val = ((turn) ? -25 : 25);
+    int val = ((turn) ? -100000 : 100000);
     for(auto i = node->children.begin(); i != node->children.end(); i++)
     {
         if(!turn)
         {
-            if((*i)->heuristic < val)
+            if((*i)->heuristic <= val)
             {
                 val = minmax(true ,*i);
             }
         }
         else
         {
-            if((*i)->heuristic > val)
+            if((*i)->heuristic >= val)
             {
                 val = minmax(false ,*i);
             }
         }
     }
+    node->heuristic = val;
     return val;
 }
 
@@ -250,11 +273,14 @@ list<int> minmaxCaller(minMaxTree* root)
     for(auto i = root->children.begin(); i != root->children.end(); i++)
     {
         int val = minmax(true ,*i);
+        (*i)->heuristic = val;
+        cout << "H = " << (*i)->heuristic << endl;
         if(val > max->heuristic)
         {
             max = *i;
         }
     }
+    cout << "picked = " << max->heuristic << endl;
     return max->move;
 }
 
@@ -280,7 +306,7 @@ extern "C" int* callAI(int* board, int* retMove)
 {    
     //printListOfListOfInts(possibleMoves(board));
     minMaxTree* root = new minMaxTree(list<int>());
-    root = build(board, 5, root);
+    root = build(board, 7, root);
     //printTree(root,0);
     list<int> aiMove = minmaxCaller(root);
     int j = 0;
@@ -290,3 +316,20 @@ extern "C" int* callAI(int* board, int* retMove)
     }
     return retMove;
 }
+
+
+extern "C" int* callRandomAI(int* board, int* retMove)
+{
+    list<list<int> > poss = possibleMoves(board);
+    srand(time(NULL));
+    int num = rand() % poss.size();
+    vector<list<int> > converted = vector<list<int> >(poss.begin(), poss.end());
+    list<int> move = converted[num];
+    int j = 0;
+    for(auto i = move.begin(); i != move.end(); i++, j++)
+    {
+        retMove[j] = *i;
+    }
+    return retMove;
+}
+

@@ -18,13 +18,13 @@ flipB b = map (*(-1)) $ reverse b
 
 build :: [Int] -> Int -> Move -> MinMaxTree
 build board 0 mov = Node (heuristic board) mov []
-build board depth mov = if (null) children then (Node (if depth `mod` 2 == 1 then 0-25 else 25) mov children) else (Node 0 mov children)
+build board depth mov = if (null) children then (Node (if depth `mod` 2 == 1 then (-25) else 25) mov children) else (Node 0 mov children)
     where children = map (\x -> build (flipB (applyMove board x)) (depth-1) x) $ possibleMoves board
 
 minmax :: Bool -> MinMaxTree -> Int
 minmax _ (Node h _ []) = h
-minmax True (Node h _ children) = maximum (map (minmax False) children) 
-minmax False (Node h _ children) = minimum (map (minmax True) children) 
+minmax False (Node h _ children) = maximum (map (minmax True) children) 
+minmax True (Node h _ children) = minimum (map (minmax False) children) 
 
 minmaxCall :: Int -> Move -> [MinMaxTree] -> Move
 minmaxCall _ mov [] = mov
@@ -36,7 +36,7 @@ getChildren :: MinMaxTree -> [MinMaxTree]
 getChildren (Node _ _ children) = children
 
 callAI :: [Int] -> [Int]
-callAI xs = minmaxCall (-9001) [] (getChildren (build xs 5 []))
+callAI xs = minmaxCall (-9001) [] (getChildren (build xs 7 []))
 
 possibleMoves :: [Int] -> [Move]
 possibleMoves board = filter (not . null) $ (foldl (++) [] (map (getPossibleMove board)  [0..31])) ++ (foldl (++) [] (map (getAllJumps board) [0..31]))
@@ -67,10 +67,10 @@ applyMove board (m1:[]) = board
 applyMove board (m1:m2:moves)
             | (m2 - m1) == 9 = applyMove (replaceNth (m2 - 4 - offset) 0 newBoard) (m2:moves)
             | (m2 - m1) == 7 = applyMove (replaceNth (m2 - 3 - offset) 0 newBoard) (m2:moves)
-            | (m1 - m2) == 9 = applyMove (replaceNth (m1 - 4 - offset) 0 newBoard) (m2:moves)
-            | (m1 - m2) == 7 = applyMove (replaceNth (m1 - 3 - offset) 0 newBoard) (m2:moves)
-            | otherwise = board
-                where newBoard = (replaceNth m1 0 (replaceNth m2 (board!!m1) board))
+            | (m2 - m1) == (-9) = applyMove (replaceNth (m1 - 4 - offset) 0 newBoard) (m2:moves)
+            | (m2 - m1) == (-7) = applyMove (replaceNth (m1 - 3 - offset) 0 newBoard) (m2:moves)
+            | otherwise = newBoard
+                where newBoard = (replaceNth m1 0 (replaceNth m2 (if m2 > 27 then 2 else (board!!m1)) board))
                       offset = ((m2 `div` 4) `mod` 2)
                   
 jumperHelper :: [Int] -> Int -> Int -> [Move]
