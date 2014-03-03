@@ -11,7 +11,7 @@ instance Show MinMaxTree where
     show (Node _ m (xs)) = (show xs) ++ (show m)
 
 heuristic :: [Int] -> Int
-heuristic board = foldl (+) 0 board
+heuristic board = foldl (-) 0 board
 
 flipB :: [Int] -> [Int]
 flipB b = map (*(-1)) $ reverse b
@@ -21,12 +21,17 @@ build board 0 mov = Node (heuristic board) mov []
 build board depth mov = if (null) children then (Node (if depth `mod` 2 == 1 then (-25) else 25) mov children) else (Node 0 mov children)
     where children = map (\x -> build (flipB (applyMove board x)) (depth-1) x) $ possibleMoves board
 
+getMove :: MinMaxTree -> Move
+getMove (Node _ mov _) = mov
+
 minmax :: Bool -> MinMaxTree -> Int
 minmax _ (Node h _ []) = h
-minmax False (Node h _ children) = maximum (map (minmax True) children) 
-minmax True (Node h _ children) = minimum (map (minmax False) children) 
+minmax True (Node h _ children) = maximum (map (minmax False) children) 
+minmax False (Node h _ children) = minimum (map (minmax True) children) 
 
 minmaxCall :: Int -> Move -> [MinMaxTree] -> Move
+--minMaxCall :: [MinMaxTree] -> Move
+--minmaxCall children = (maximum (map (minMax True) children))
 minmaxCall _ mov [] = mov
 minmaxCall h mov (node@(Node _ m1 _):nodes) = if tempH > h then minmaxCall tempH m1 nodes
                                             else minmaxCall h mov nodes
@@ -36,7 +41,7 @@ getChildren :: MinMaxTree -> [MinMaxTree]
 getChildren (Node _ _ children) = children
 
 callAI :: [Int] -> [Int]
-callAI xs = minmaxCall (-9001) [] (getChildren (build xs 7 []))
+callAI xs = minmaxCall (-9001) [] (getChildren (build xs 5 []))
 
 possibleMoves :: [Int] -> [Move]
 possibleMoves board = filter (not . null) $ (foldl (++) [] (map (getPossibleMove board)  [0..31])) ++ (foldl (++) [] (map (getAllJumps board) [0..31]))

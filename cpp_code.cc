@@ -274,13 +274,13 @@ list<int> minmaxCaller(minMaxTree* root)
     {
         int val = minmax(true ,*i);
         (*i)->heuristic = val;
-        cout << "H = " << (*i)->heuristic << endl;
+        //cout << "H = " << (*i)->heuristic << endl;
         if(val > max->heuristic)
         {
             max = *i;
         }
     }
-    cout << "picked = " << max->heuristic << endl;
+    //cout << "picked = " << max->heuristic << endl;
     return max->move;
 }
 
@@ -306,7 +306,7 @@ extern "C" int* callAI(int* board, int* retMove)
 {    
     //printListOfListOfInts(possibleMoves(board));
     minMaxTree* root = new minMaxTree(list<int>());
-    root = build(board, 7, root);
+    root = build(board, 5, root);
     //printTree(root,0);
     list<int> aiMove = minmaxCaller(root);
     int j = 0;

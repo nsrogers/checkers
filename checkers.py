@@ -269,6 +269,7 @@ def checkers():
     _win = False
     _draw = False
     while (not _win) and (not _draw):
+        time.sleep(.5)
         displayBoard(board)
         if currPlayer == 0:
             print "It is Player x's Turn"
