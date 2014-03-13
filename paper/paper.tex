@@ -2,15 +2,21 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage[margin=1in]{geometry}
+\usepackage{listings}
+\lstset{basicstyle=\footnotesize, numbers=left}
 \begin{document}
 
 \begin{titlepage}
-\title{Checkers with AI}
-\date{March 14, 2014}
-\author{Thomas White
-    \and Nathan Rogers
+\title{\huge \bf Checkers with AI}
+\date{\today}
+\author{Thomas White \\
+    \and Nathan Rogers \\
     \and Daniel Shubin}
 \maketitle
+\begin{center}
+    CMPS 112 - Comparative Programming Languages \\
+    Final Project Report
+\end{center}
 \end{titlepage}
 
 \section{Introduction:}
@@ -31,4 +37,48 @@
         the class. And it is a contrast to the imperative languages since
         it is purely functional.
 
+
+\section{Calling C++ and Haskell From Python}
+    \subsection{C++}
+        \subsubsection{Introduction:}
+            Python has a built in module called ctypes which allows the programmer
+            to use C types. These are literally variables that are of the same types
+            one would use in a C program. This module also allows one to load in compiled
+            library files and call functions in that library. The return values from these
+            functions are C types as well and things like Python Lists or Dictionaries must
+            be converted into C types before being used in the python program. In our project
+            we wrote an AI in C++ which is called from our main Python program. We pass in
+            the board and also a pointer to a list of moves to be returned, more on this
+            later.
+        \subsubsection{Code Example}
+            \lstinputlisting[language=Python, firstline=7, lastline=21]{../checkers.py}
+        \subsubsection{How the code works}
+            First we convert our board, which is a list of ints in python, to a C style array
+            of ints. On lines 3 and 4, we initialize another C array of ints which will eventually
+            be the returned move. On lines 5 and 6 we load a function from our precompiled library
+            and tell ctypes explicitly what the return type is going to be. We then call the function
+            passing in the board and the pointer to our move array. When we return from the function,
+            we must convert the C style array of ints into a Python list (lines 8-14). And finally
+            we return the AI's move.
+        \subsubsection{Why we chose this}
+            The foreign function interface ctypes is very well documented and easy to use.
+            It gives the programmer the capabilities (speed) of C/C++ programming
+            and still have the higher level Python features in the main code.
 \end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
