@@ -1,7 +1,8 @@
 from ctypes import *
 import time
-from HaPy import hsklAI #See https://github.com/sakana/HaPy/blob/master/README.md 
-                        #for directions on how to use HaPY. 
+from HaPy import hsklAI 
+#See https://github.com/sakana/HaPy/blob/master/README.md 
+#for directions on how to use HaPY. 
 
 #pass in a list of ints
 def callCPPAI(board):

@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage[margin=1in]{geometry}
 \usepackage{listings}
+\usepackage{hyperref}
 \lstset{basicstyle=\footnotesize, numbers=left}
 \begin{document}
 
@@ -40,7 +41,7 @@
 
 \section{Calling C++ and Haskell From Python}
     \subsection{C++}
-        \subsubsection{Introduction:}
+        \subsubsection{Introduction}
             Python has a built in module called ctypes which allows the programmer
             to use C types. These are literally variables that are of the same types
             one would use in a C program. This module also allows one to load in compiled
@@ -51,7 +52,7 @@
             the board and also a pointer to a list of moves to be returned, more on this
             later.
         \subsubsection{Code Example}
-            \lstinputlisting[language=Python, firstline=7, lastline=21]{../checkers.py}
+            \lstinputlisting[language=Python, firstline=8, lastline=22]{../checkers.py}
         \subsubsection{How the code works}
             First we convert our board, which is a list of ints in python, to a C style array
             of ints. On lines 3 and 4, we initialize another C array of ints which will eventually
@@ -63,7 +64,59 @@
         \subsubsection{Why we chose this}
             The foreign function interface ctypes is very well documented and easy to use.
             It gives the programmer the capabilities (speed) of C/C++ programming
-            and still have the higher level Python features in the main code.
+            and still have the higher level Python features in the main code. Since ctypes
+            is included in Python out of the box, no additional work needs to be done to prepare
+            the C/C++ code to work. Simply compile the code into a shared library and import that
+            library with ctypes. Since python has some amount of features from the functional
+            programming side of things, the programmer can load a C/C++ function in and treat it
+            as first class. First class functions can be passed around just like regular variables.
+            In the sample code above, we load the function and set it as a variable. Then call that
+            function, using the variable. ctypes encapsulates the actual function call and return
+            values, allowing us to access and change metadata about the function. We can tell ctypes
+            what the return type of the function is and access the contents of the return value after
+            the function is called. This allows for better readability in the Python code and
+            generally smooths the relationship between Python and C/C++
+            
+    \subsection{Haskell}
+        \subsubsection{Introduction}
+            Unlike C/C++, Python doesn't have built in compatibility with Haskell. Haskell however
+            does have a foreign function interface built in to the language and the Glasgow Haskell
+            Compiler. There is a number of libraries out there which deal with the Haskell FFI and
+            allow easy interfacing with other languages. One such library is called HaPy, which
+            provides an interface between Python and Haskell which allows Python to directly call
+            Haskell functions, much like how ctypes works with C/C++.
+        \subsubsection{Code Example}
+            \lstinputlisting[language=Python, firstline=3, lastline=3,
+                title=Importing from Python (checkers.py)]{../checkers.py}
+            \lstinputlisting[language=Haskell,
+                title=Exporting the AI module to HaPy (Export.hs)]{../Export.hs}
+            \lstinputlisting[language=Haskell, firstline=1, lastline=7,
+                title=First few lines of defining our AI module (HsklAI.hs)]{../HsklAI.hs}
+        \subsubsection{How the code works}
+            The code and installation instructions for HaPy can be
+            found here: \\ \url{https://github.com/sakana/HaPy} \\
+            Generally what this library does is that once you compile Haskell into a
+            shared library (much like we do for C/C++) the Python types are converted into
+            a C representation, and then into a Haskell representation, then the function is
+            executed. The return type is propagated in reverse to Python 
+            $(Haskell \rightarrow C \rightarrow Python)$.
+            HaPy currently supports converting Python primitive types (int, string, etc.) 
+            as well as lists into their equivalent in Haskell. Calling the function is also
+            abstracted away nicely so that when the programmer wants to call a Haskell 
+            function from Python, is looks exactly like a standard python library
+            function call would.
+            \lstinputlisting[language=Python, firstline=171, lastline=171]{../checkers.py}
+        \subsubsection{Why we chose this}
+            Using a library like HaPy to do the dirty work of using the Foreign Function Interface
+            allowed us to focus more on writing good Haskell code. Instead of worrying about 
+            the representation of our types and how they would propagate to Python, we just wrote
+            our Haskell code and let the library take care of the type issues. Over all, HaPy is
+            easy to set up (at least on the Mac system we primarily tested on) and has a clean
+            and easy to use interface on the Python side. It requires a non trivial amount
+            of set up to initially get everything to work, but HaPy has clear instructions
+            on how to get project files set up. And once the libraries are installed in both
+            Python and Haskell everything works beautifully.
+            
 \end{document}
 
 
