@@ -14,6 +14,7 @@
     \and Nathan Rogers \\
     \and Daniel Shubin}
 \maketitle
+\thispagestyle{empty}
 \begin{center}
     CMPS 112 - Comparative Programming Languages \\
     Final Project Report
@@ -38,26 +39,60 @@
         the class. And it is a contrast to the imperative languages since
         it is purely functional.
 
+\section{Comparing Languages}
+    \subsection{Python}
+        We chose python for the base of our project; implementing the checkers game engine in it. Python was a good choice for this as it allowed us to quickly write the main game loop and all checks needed to confirm a valid move. Python also allowed for a uniform base to call the AI's in both C++ and Haskell. In addition, Python allowed for many options to facilitate these calls and is a common go-between languages.
+
+        \subsubsection{Experience}
+            We found python a very easy language to use and took advantage of the fact that python is a scripting language. We did use multiple functions, and even those are very simple in python. In addition, we did not have to worry about memory leaks in Python. We found it very simple to write the code, allowing use to concentrate more on how to correctly implement the rules for valid moves and game ending situations.
+
+    \subsection{C++}
+        C++ is what we used for our first implementation of the checkers AI. C++ was chosen for several reasons. First, it is a language the entire team has experience in. This allowed us to focus more on the implementation of the algorithm used rather then learning the language. This was also helpful as we wrote the AI in C++ first and allowed us to better understand how the min-max algorithm worked. Second, C++ is an imperative language, allowing us to examine the creation process of a program in a different type of language.
+
+        \subsubsection{Experience}
+            There was very few issues in getting C++ to run correctly. It was simple to do loops that could check for possible moves in our algorithm and error checking for invalid moves is much cleaner in the if statements. We had to create a basic tree for our min-max tree, and it was easy to access any variable in a specific node that we wanted. The ability for clean if statements and loops combined with good variable and function names makes the C++ code easier to follow also. \\ \\
+            Since the code is easier to read and follow, it was also easier to debug the algorithm also. We could use print statements whenever we wanted to know the value of a specific variable. It is also easier to keep track of changes made to the variable. This was very useful when checking to see if the min-max tree was returning the correct heuristic values. \\ \\
+            We did run into one issue with C++ and memory management. Because we have to free everything that we had used malloc on, there was a memory leak in our program. When using the C++ AI to look at 7 or more moves ahead, it would consume gigabytes of memory. There is an easy fix to this, and we just have to free the nodes in the min-max tree as we travel up towards the root node.
+
+        \subsubsection{Stats}
+            In the actual coding, we spent about 4 hours programming. This also includes planning out how our algorithm was actually going to run in addition to implementing it. Including comments and white space, we wrote 334 lines in C++, which ended up at 264 lines of actual code. C++ ran our algorithm in roughly 0.2 seconds when checking to a depth of 5 turns and took 4 seconds at a depth of 7 turns.
+
+    \subsection{Haskell}
+            We chose Haskell to implemented our second AI. Haskell is a functional language, so it gives good contrast to the imperative style of programming in C++ and the scripting that python provides. We started on the Haskell AI after finishing the AI in C++ as we were not as proficient in Haskell as C++. This gave us the chance to figure out the AI in a familiar language before rewriting it in Haskell.
+
+        \subsubsection{Experience}
+            Haskell was an interesting language to write an AI in. It was much harder to visualize how the code was going to run in Haskell as we had to use maps and recursion over loops. At the same time, the use of maps made for very little code to actually write. Another issue we came across in Haskell was the inability to modify variables after creating them. To fix this, we would have to copy the list element by element, checking to see if a given element needed to be changed and then change it if so. This increased our run time greatly, especially when using a deeper search. After completed the code, we did find that it is possible to use mutable arrays, which would be a major increase to the Haskell run time. \\ \\
+            After we finished writing the Haskell AI, we noticed that there were some parts of our Haskell code that were much harder to read. It is much more difficult to understand what our code is doing when checking for valid moves in Haskell then in C++, as each move needed numerous checks to make sure no edge cases were failing. Other parts of the code were much easier to understand, as many helper functions in Haskell are only one or two lines. We also found it was much more difficult to debug issues in Haskell then C++. It is harder to check if your code is doing what you think it is in Haskell, as there is no easy way to print out trees with variable data in each node. In addition, due to some of the Haskell code being harder to read, it was harder to spot mistakes in the code.
+
+        \subsubsection{Stats}
+            We spent about 4 hours programming our Haskell code. In these 4 hours, we wrote 73 lines of code to run our AI. Haskell did not have any memory leak errors due to garbage collection. With a search depth of 5, Haskell ran in roughly 0.2 seconds. When increasing the depth to 7, the run time in Haskell increased up to 12 seconds.
+
+    \subsection{Comparing}
+        When running, both C++ and Haskell ran at similar times for a search depth of 5. When increasing the depth to 7, Haskell became much slower then C++. We believe this is because Haskell had to copy lists to change a single entry. When increasing the depth, the algorithm goes over a much greater number of boards, making the slow list coping more apparent. For memory usage, Haskell used around 6 MB at all times, where as C++ used GB's of memory due to the memory leak. \\ \\
+        In terms of readability, we found C++ was much easier to understand. The loops make it simple to see what is happening in each part of the code. When writing the code, both languages took similar time, but some of the development time in C++ went to understanding the Min-Max algorithm, while all the development time for Haskell went towards implementation.
+
+
+
 \section{Algorithms}
 		
 	\subsection{Move Validation}
-	Move validation was the bulk of our ugly code as the best way of implementing was to hardcode all the conditions that had to be met and matching them. We separated the move validation and application to simply the latter as applying moves was complicated enough in haskell.
+    	Move validation was the bulk of our ugly code as the best way of implementing was to hardcode all the conditions that had to be met and matching them. We separated the move validation and application to simply the latter as applying moves was complicated enough in Haskell.
 	
 	\subsection{Flipping the board}
-Early on we decided to simplify the AI's code by always giving the AI the game state as if they were the player sitting at the top of the board. This was accomplished by flipping before the AI was called on the bottom player.		The flipping code had to be implemented in the AI's as well because the MinMax algorithm requires playing as the other player every other depth
+        Early on we decided to simplify the AI's code by always giving the AI the game state as if they were the player sitting at the top of the board. This was accomplished by flipping before the AI was called on the bottom player.		The flipping code had to be implemented in the AI's as well because the MinMax algorithm requires playing as the other player every other depth
 	
 	\subsection{MinMax}
-The MinMax algorithm consists of finding every possible board position after a set number of moves. Then Generating a score for the boards final position. The board was stored in a tree with each node storing a move, a score, and having a list of children nodes. The tree is generated by recursively calling the function for each possible move with a depth of one less the previous and a version of the board with the move applied and then this board is flipped to simulate the other players turn. The building part recurses until it reaches the maximum depth specified and calculates and saves the heuristic in the leaf node. The function return on leaf node and all the nodes are added to the list in a depth first fashion. After the tree is built it it traversed depth first again but this time will traverse all the way to the bottom non-leaf nodes and find the maximum or minimum heuristic for the node depending on whether it simulated your turn or the opponent. The calls keep returning the max or min until the best value is which ever node has the highest value at the end.
+        The MinMax algorithm consists of finding every possible board position after a set number of moves. Then Generating a score for the boards final position. The board was stored in a tree with each node storing a move, a score, and having a list of children nodes. The tree is generated by recursively calling the function for each possible move with a depth of one less the previous and a version of the board with the move applied and then this board is flipped to simulate the other players turn. The building part recurses until it reaches the maximum depth specified and calculates and saves the heuristic in the leaf node. The function return on leaf node and all the nodes are added to the list in a depth first fashion. After the tree is built it it traversed depth first again but this time will traverse all the way to the bottom non-leaf nodes and find the maximum or minimum heuristic for the node depending on whether it simulated your turn or the opponent. The calls keep returning the max or min until the best value is which ever node has the highest value at the end.
 	
 	\subsection{Heuristic}
-Our heuristic was chosen due to its simplicity and ease in debugging its decisions. We simply added the pieces on the board with the opponents pieces being negative to the score and your pieces being positive. When summing the regular pieces were worth 1 and kings are worth 2. We also added code to detect a stalemate and made it a maximum value when the opponent cant move and a minimum amount when you cant move since this is a loss for the player that can't win. 
+        Our heuristic was chosen due to its simplicity and ease in debugging its decisions. We simply added the pieces on the board with the opponents pieces being negative to the score and your pieces being positive. When summing the regular pieces were worth 1 and kings are worth 2. We also added code to detect a stalemate and made it a maximum value when the opponent cant move and a minimum amount when you cant move since this is a loss for the player that can't win. 
 
 	\subsection{Language Specific Deviations}
-C++ was the first language we decided to implement and it stuck closest to the design. When we made modifications we changed the design. The calling of C++ code in python with C types made it so we had to insert the move output stored in the STL list type of C++ into a C array so python could read it.
-\par
-Haskells lack of for loops made the code look different but overall we simply used a map our function over the sequence [0:31] to simulate indexes into arrays. The part of the algorithm that preformed MinMax traversal of the tree was much more complicated due to Haskells lack of states so the algorithm to finds the extreme of the row required a self recursive call as well as a downward depth recursive call and a comparison of all the return values of the depth call. This compares to the C++ code where we only had to recourse downwards and compare the results to a variable stored outside the for loop.
-\par
-Python only needed the Validate move to checks the moves inputted. The python code for validation move was basically the same as C as it turn out the best method was just a bunch of if statements checking conditions for each movement. To check for stale make all possible a list of all feasible 1 space moves or single jumps was generated and if any passed validating there was no stalemate.
+        C++ was the first language we decided to implement and it stuck closest to the design. When we made modifications we changed the design. The calling of C++ code in python with C types made it so we had to insert the move output stored in the STL list type of C++ into a C array so python could read it.
+    \\ \\
+        Haskell's lack of for loops made the code look different but overall we simply used a map our function over the sequence [0:31] to simulate indexes into arrays. The part of the algorithm that preformed MinMax traversal of the tree was much more complicated due to Haskell's lack of states so the algorithm to finds the extreme of the row required a self recursive call as well as a downward depth recursive call and a comparison of all the return values of the depth call. This compares to the C++ code where we only had to recourse downwards and compare the results to a variable stored outside the for loop.
+    \\ \\
+        Python only needed the Validate move to checks the moves inputted. The python code for validation move was basically the same as C as it turn out the best method was just a bunch of if statements checking conditions for each movement. To check for stale make all possible a list of all feasible 1 space moves or single jumps was generated and if any passed validating there was no stalemate.
 
 \section{Calling C++ and Haskell From Python}
     \subsection{C++}
@@ -136,8 +171,19 @@ Python only needed the Validate move to checks the moves inputted. The python co
             of set up to initially get everything to work, but HaPy has clear instructions
             on how to get project files set up. And once the libraries are installed in both
             Python and Haskell everything works beautifully. 
-            %We could have used Sockets or stdin instead of the hooking the guctions into python but each require a lot more bookkeeping code and add there own complications.
+            We could have used Sockets or stdin instead of the hooking the functions into 
+            python but each require a lot more bookkeeping code and add there own complications.
 
+
+\section{Conclusion}
+    In conclusion, we found that Haskell as a language, is harder to think about the design,
+    but produces less lines of code. And given our experience in C++ the code was easier to
+    think about, but produces more lines of code. Readability was fairly equal, even with the line
+    of code disparity. C++ was quicker, and would take similar memory if memory leaks are fixed.
+    Debugging is generally easier for C++ because we can throw print statements anywhere to check 
+    the state of the program. The interpreter for Haskell is nice, but C++ debugging is 
+    easier to use. Both languages have easy interfaces with Python. 
+    
 \end{document}
 
 
